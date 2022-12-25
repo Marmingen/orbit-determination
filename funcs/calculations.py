@@ -22,12 +22,11 @@ def deg_to_rad(deg, min, sec):
       
     return ang/180*math.pi
 
-"""
-converts radians to hours, mins, and secs
-(one revolution is 24 hours)
-"""
 def time_to_rad(h, m, s):
-
+    """
+    converts hours, mins, and secs to radians
+    (one revolution is 24 hours)
+    """
     ang = 0
     
     ang += s*2*math.pi/24/3600
@@ -164,7 +163,6 @@ def calc_yab(ta, tb, ra, rb):
     y2 = y13
     y3 = y12
     """
-        
     K = math.sqrt(2*(abs(ra)*abs(rb) + ra*rb))
     
     m2 = (k*(tb-ta))**2/(K**3)
@@ -289,16 +287,21 @@ def step45678_iteration(ogtimes, dhats, trans_crds2, trans_crds3, solar_dists, t
         
         corr_times = [ogtime - corr for ogtime,corr in zip(ogtimes, delta_times)]
         
+        # c = [c1, c3]
+        c = calc_c(corr_times, y)
+
+        deltas = calc_geo_dist(trans_crds2, trans_crds3, trans_solpos, c)
+    
         r = heliocentric_dist(deltas, dhats, solar_dists)
         
         [y, a_iters] = calc_ys(corr_times, r)
         
         _roll(rolling_values, abs(r[1]))
         
-        if abs(rolling_values[0]-2*rolling_values[1]+rolling_values[2]) < diff_eps:            
+        if abs(rolling_values[0]-2*rolling_values[1]+rolling_values[2]) < diff_eps:       
             return [r, corr_times, iters, a_iters]
         
-    raise Exception("Selected positions are probably on a great circle")
+    raise Exception("Positions not converging, most likely lie on a great circle")
         
     
 def nrml_to_JDT(date, corr=0):

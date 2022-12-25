@@ -25,4 +25,4 @@ clear = lambda: os.system('cls')
 # error
 # diff_eps = 0.0000001
 
-diff_eps = 1e-10
+diff_eps = 1e-12

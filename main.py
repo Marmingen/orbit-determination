@@ -104,7 +104,7 @@ def print_results(orbital_elements, iters, a_iters, name):
         
         print(f"{name:<15}{round(element,5)}{unit}")
 
-
+    print()
     input("press enter to quit")
 
 #################################################################################
