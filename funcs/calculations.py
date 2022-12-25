@@ -146,15 +146,15 @@ def calc_ys(times, r):
     i.e. estimating the swept areas
     """
     # y1 = y23
-    y1 = calc_yab(times[1], times[2], r[1], r[2])
+    [y1, i1] = calc_yab(times[1], times[2], r[1], r[2])
     
     # y2 = y13
-    y2 = calc_yab(times[0], times[2], r[0], r[2])
+    [y2, i2] = calc_yab(times[0], times[2], r[0], r[2])
     
     # y3 = y12
-    y3 = calc_yab(times[0], times[1], r[0], r[1])
+    [y3, i3] = calc_yab(times[0], times[1], r[0], r[1])
     
-    return [y1, y2, y3]
+    return [[y1, y2, y3],  i1 + i2 + i3]
 
 
 def calc_yab(ta, tb, ra, rb):
@@ -175,14 +175,14 @@ def calc_yab(ta, tb, ra, rb):
     
     iters = 0
     
-    for _ in range(100):
+    for iters in range(100):
         
         [y2, y3] = steffensen(m2, l, y1)
         
         ystar = y1 - 2*y2 + y3 
         
         if abs(ystar) <= diff_eps:
-            return y3
+            return [y3, iters]
         
         y1 = y1 - (y2-y1)**2/ystar
         
@@ -209,7 +209,7 @@ def Q(x):
     elif x < 0:
         return 3/16*(2*(1-2*x)*math.sqrt(x**2-x)-math.log(1-2*x+2*math.sqrt(x**2-x)))/((x**2-x)**(3/2))
     else:
-        return 1  
+        return 1
     
     
 def calc_v2(r, times):
@@ -270,7 +270,7 @@ def calc_T(a,e,r,v,times):
 
 def step45678_iteration(ogtimes, dhats, trans_crds2, trans_crds3, solar_dists, trans_solpos):    
     
-    def roll(lis, val):
+    def _roll(lis, val):
         lis.pop(0)
         return lis.append(val)
     
@@ -291,12 +291,12 @@ def step45678_iteration(ogtimes, dhats, trans_crds2, trans_crds3, solar_dists, t
         
         r = heliocentric_dist(deltas, dhats, solar_dists)
         
-        y = calc_ys(corr_times, r)
+        [y, a_iters] = calc_ys(corr_times, r)
         
-        roll(rolling_values, abs(r[1]))
+        _roll(rolling_values, abs(r[1]))
         
         if abs(rolling_values[0]-2*rolling_values[1]+rolling_values[2]) < diff_eps:            
-            return [r, corr_times, iters]
+            return [r, corr_times, iters, a_iters]
         
     raise Exception("Selected positions are probably on a great circle")
         

@@ -26,7 +26,7 @@ def handle_orbital_calcs(r2, v2, times):
     return [a, abs(e), i, w, W, T]
 
 
-def algorithm_orbital_elements(eq_coords, times, solar_pos):
+def algorithm_orbital_elements(eq_coords, times, solar_pos, name):
     
     # step 1  || use terrestrial observations to calculate unit pos vec
     
@@ -64,7 +64,7 @@ def algorithm_orbital_elements(eq_coords, times, solar_pos):
     # ---------- |
     # step 9  || | iterate 5-8 to convergence (if converges)
     
-    [r, corr_times, iters] = step45678_iteration(times, dhats,\
+    [r, corr_times, iters, a_iters] = step45678_iteration(times, dhats,\
         transformed_delta_hat2, transformed_delta_hat3, solar_pos, transformed_solar_pos)
     
     # step 10 || estimate the velocity vector for r2
@@ -80,21 +80,22 @@ def algorithm_orbital_elements(eq_coords, times, solar_pos):
         if i > 2 and orbital_elements[i] < 0:
             orbital_elements[i] = orbital_elements[i] + 360
     
-    print_results(orbital_elements, iters)
+    print_results(orbital_elements, iters, a_iters, name)
 
 
 #########################################
 ## printing
 
-def print_results(orbital_elements, iters):
+def print_results(orbital_elements, iters, a_iters, name):
     
     clear()
     print("CALCULATION INFORMATION")
     print(bar)
     print(f"{'differential epsilon: ':<15}{diff_eps}")
-    print(f"{'area iterations: ':<15}{iters}")
+    print(f"{'area iterations: ':<15}{a_iters}")
+    print(f"{'distance iterations: ':<15}{iters}")
     print()
-    print("CALCULATED ORBITAL ELEMENTS")
+    print(f"CALCULATED ORBITAL ELEMENTS FOR {name.upper()}")
     print(bar)
     for name, element, unit in zip(["a: ", "e: ", \
         "i: ", "\u03C9: ",\
@@ -104,15 +105,23 @@ def print_results(orbital_elements, iters):
         print(f"{name:<15}{round(element,5)}{unit}")
 
 
+    input("press enter to quit")
+
 #################################################################################
 ## MAIN
 
 def main():
     
-    choice = input_selection()
-    
-    algorithm_orbital_elements(choice[0], choice[1], choice[2])
-
+    while True:
+        
+        choice = input_selection()
+        
+        if choice:    
+            algorithm_orbital_elements(choice[0], choice[1], choice[2], choice[3])
+        else:
+            break
+        
+    print("quitting...")
 
 #################################################################################
 ## RUN CODE
