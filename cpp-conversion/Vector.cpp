@@ -39,57 +39,46 @@ double Vector::abs()
     return sqrt(pow(x,2)+pow(y,2)+pow(z,2));
 }
 
-Vector operator+(const Vector &v1, const Vector &v2)
+Vector Vector::operator+(const Vector &v2)
 {
     Vector res;
-    res.x = v1.x + v2.x;
-    res.y = v1.y + v2.y;
-    res.z = v1.z + v2.z;
+    res.x = x + v2.x;
+    res.y = y + v2.y;
+    res.z = z + v2.z;
     return res;
 }
 
-Vector operator-(const Vector &v1, const Vector &v2)
+Vector Vector::operator-(const Vector &v2)
 {
     Vector res;
-    res.x = v1.x - v2.x;
-    res.y = v1.y - v2.y;
-    res.z = v1.z - v2.z;
+    res.x = x - v2.x;
+    res.y = y - v2.y;
+    res.z = z - v2.z;
     return res;
 }
 
-Vector Vector::operator=(Vector &v1)
+Vector Vector::operator=(Vector &v2)
 {
-    v1.x = x;
-    v1.y = y;
-    v1.z = z;
+    v2.x = x;
+    v2.y = y;
+    v2.z = z;
+
+    return v2;
 }
 
 // vector multiplication defined as scalar
-double operator*(const Vector &v1, const Vector &v2)
+double Vector::operator*(const Vector &v2)
 {
-    return v1.x*v2.x+v1.y*v2.y+v1.z*v2.z;
+    return x*v2.x+y*v2.y+z*v2.z;
 }
 
-Vector operator*(const double &a, const Vector &v2)
+Vector Vector::operator*(const double &a)
 {
-    return Vector(a*v2.x, a*v2.y, a*v2.z);
+    return Vector(a*x, a*y, a*z);
 }
 
-Vector operator*(const Vector &v1, const double &b)
+std::ostream &operator<<(std::ostream &out, const Vector &v)
 {
-    return Vector(b*v1.x, b*v1.y, b*v1.z);
+    out << "[" << floor(v.x*100.0)/100.0 << ", " << floor(v.y*100.0)/100.0 << ", " << floor(v.z*100.0)/100.0 << "]";
+    return out;
 }
-
-ostream Vector::operator<<(ostream &out, const Vector &v)
-{
-    return out << "[" << floor(v.x*100.0)/100.0 << ", " << floor(v.y*100.0)/100.0 << ", " << floor(v.z*100.0)/100.0 << "]";
-}
-
-
-
-// int main() 
-// {
-//     Vector v1(12,10,10);
-
-//     cout << v1;
-// }

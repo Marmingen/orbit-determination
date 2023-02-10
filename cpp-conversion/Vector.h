@@ -14,5 +14,13 @@ class Vector
         Vector norm();
         Vector cross(const Vector &v2);
         double abs();
-        Vector operator=(Vector &v1);
+
+        // operators
+        Vector operator=(Vector &v2);
+        Vector operator+(const Vector &v2);
+        Vector operator-(const Vector &v2);
+        double operator*(const Vector &v2);
+        Vector operator*(const double &a);
 };
+
+ostream &operator<<(ostream &out, const Vector &v);
