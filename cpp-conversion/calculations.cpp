@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cmath>
 #include <math.h>
+#include <string>
 #include "Vector.h"
 #include "Matrix.h"
 #include "constants.h"
@@ -238,4 +239,100 @@ Vector calcEcc(const Vector r2, const Vector v2, const Vector h)
 double calcInc(const Vector h)
 {
     return acos(h.z/h.abs());
+}
+
+double calcNode(const Vector h)
+{
+    return atan2(h.x, -h.y);
+}
+
+double calcArg(const Vector h, const Vector e)
+{
+    return atan2(h.abs()*e.z, h.x*e.y-h.y*e.x);
+}
+
+double calcT(const double a, const double e, const double r, const double v, const double times[3])
+{
+    double x = (1-abs(r)/a)/e;
+    double y = (r*v)/sqrt(a*pow(k,2))/e;
+
+    double E = atan2(y,x);
+    double M = E - e*sin(E);
+    double n = sqrt(pow(k,2)/pow(a,3));
+
+    return (times[1]-M/n);
+}
+
+void calcIters(const double ogTimes[3], const Vector dHats[3], const Vector transCrds2, const Vector transCrds3, const Vector solarDists[3], const Vector transSolPos[3])
+{
+    class RollingVals
+    {
+        public:
+            double values[3];
+
+            RollingVals()
+            {
+                double values[3] = {1,2,0};
+            };
+
+            double rollValues(const double newVal)
+            {
+                double temp[3] = {values[1], values[2], newVal};
+                delete values;
+                *values = *temp;
+            };
+    };
+
+    RollingVals rollVals;
+
+    double y[3] = {1,1,1};
+
+    for (int i = 0; i < 100; i++)
+    {
+        // c = [c1, c3]
+        double c[2];
+        calcC(c, ogTimes, y);
+
+        double deltas[3];
+        calcGeoDist(deltas, transCrds2, transCrds3, transSolPos, c);
+
+        double deltaTimes[3];
+        planetaryAbberation(deltaTimes, deltas);
+
+        double corrTimes[3];
+        for (int i = 0; i < 3; i++)
+        {
+            corrTimes[i] = ogTimes[i] - deltaTimes[i];
+        }
+
+        // c = [c1, c3]
+        calcC(c, corrTimes, y);
+
+        Vector r[3];
+        heliocentricDist(r, deltas, dHats, solarDists);
+
+        int aIters = 0;
+        calcYs(y, aIters, corrTimes, r);
+
+        rollVals.rollValues(r[1].abs());
+    }
+
+    if (abs(rollVals.values[0]-2*rollVals.values[1]+rollVals.values[2]) < diffEps)
+    {
+        return;
+    }
+
+    throw runtime_error("Positions not converging, most likely lie on a great circle");
+}
+
+double nrmlToJDT(string date, const double corr)
+{
+    int Y = stoi(date.substr(0,4));
+    int M = stoi(date.substr(4,6));
+    int D = stoi(date.substr(6));
+
+    double JD = 367*Y - int(7/4*(Y + int((M+9)/12)));
+    D += int(275*M/9);
+    JD += D + 1721013.5;
+    JD -=corr/24;
 }

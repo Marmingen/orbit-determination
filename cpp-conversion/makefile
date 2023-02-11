@@ -1,0 +1,1 @@
+g++ calculations.cpp Matrix.cpp Vector.cpp -o main
