@@ -88,7 +88,7 @@ Matrix RecToeq(const double deg)
 
 //########## element calcs ############
 
-void calcC(double cvals[], const float times[], const double y[])
+void calcC(double cvals[], const double times[], const double y[])
 {
     cvals[0] = (y[1]/y[0])*(times[2]-times[1])/(times[2]-times[0]);
     cvals[1] = (y[1]/y[2])*(times[1]-times[0])/(times[2]-times[0]);
@@ -120,4 +120,122 @@ void heliocentricDist(Vector r[3], double deltas[3], Vector dhats[3], const Vect
     {
         r[i] = deltas[i]*dhats[i]-solarPos[i];
     }
+}
+
+
+void calcYs(double y[3], int &iters, const double times[3],const Vector r[3])
+{
+    // y1 = y23
+    double y1, y2, y3;
+    int iters1, iters2, iters3;
+
+    calcYab(iters1, y1, times[1], times[2], r[1], r[2]);
+    calcYab(iters2, y2, times[0], times[2], r[0], r[2]);
+    calcYab(iters3, y3, times[0], times[1], r[0], r[1]);
+
+    // returns
+    y[0] = y1;
+    y[1] = y2;
+    y[2] = y3;
+    iters = iters1 + iters2 + iters3;
+}
+
+void calcYab(int &iters, double &y3, const double ta, const double tb, const Vector ra, const Vector rb)
+{
+    /*
+    * calculates the y-value for yab
+    * y1 = y23
+    * y2 = y13
+    * y3 = y12
+    */
+
+    double K = sqrt(2*(abs(ra)*abs(rb)+ra*rb));
+
+    double m2 = pow((k*(tb-ta)),2)/pow(K,3);
+
+    double l = (abs(ra)+abs(rb)-K)/(2*K);
+
+    double y1 = 1;
+
+    double y2;
+
+    for (int i = 0; i < maxIters; i++)
+    {
+        steffensen(y1, y2, y3, m2, l);
+
+        double ystar = y1 - 2*y2 + y3;
+
+        if (abs(ystar) <= diffEps)
+        {
+            return;
+        }
+
+        y1 = y1 - pow(y2-y1,2)/ystar;
+
+        iters++;
+    }
+
+    throw runtime_error("Not converging, too many iterations");
+
+}
+
+void steffensen(const double y1, double &y2, double &y3, const double m2, const double l)
+{
+    double x1 = m2/pow(y1,2)-l;
+
+    y2 = 1 + (4/3) * (m2/pow(y1,2))*Q(x1);
+
+    double x2 = m2/pow(y2,2) - l;
+
+    y3 = 1 + (4/3)*(m2/pow(y2,2))*Q(x2);
+}
+
+double Q(const double x)
+{
+    if (0 < x <= 1/2)
+    {
+        return 3/16*(2*(2*x-1)*sqrt(x-pow(x,2))+asin(2*x-1)+M_PI/2)/(pow(x-pow(x,2),3/2));
+    }
+    else if (x < 0)
+    {
+        return 3/16*(2*(1-2*x)*sqrt(pow(x,2)-x)-log(1-2*x+2*sqrt(pow(x,2)-x)))/(pow(pow(x,2)-x,3/2));
+    }
+    else {return 1;}   
+}
+
+double calcV2(const Vector r[3], const double times[3])
+{
+    double f1 = 1-1/2*(pow(k,2)*pow(times[0]-times[1],2)*pow(abs(r[1]),-3));
+    
+    double f3 = 1-1/2*(pow(k,2)*pow(times[2]-times[1],2)*pow(abs(r[1]),-3));
+    
+    double g1 = times[0] - times[1] - 1/6*(pow(k,2)*pow(times[0]-times[1],3)*pow(abs(r[1]),-3));
+    
+    double g3 = times[2] - times[1] - 1/6*(pow(k,2)*pow(times[2]-times[1],3)*pow(abs(r[1]),-3));
+    
+    double v2_1 = 1/g1 * (r[0]-f1*r[1]);
+    
+    double v2_2 = 1/g3 * (r[2]-f3*r[1]);
+    
+    return (v2_1 + v2_2)*(1/2);
+}
+
+//########## element calcs ############
+
+double calcSemimajor(const Vector r2, const Vector v2)
+{
+    double v = abs(v2);
+    double r = abs(r2);
+
+    return 1/pow(2/r-(v/k),2);
+}
+
+Vector calcEcc(const Vector r2, const Vector v2, const Vector h)
+{
+    return 1/pow(k,2)*v2.cross(h) - r2/abs(r2);
+}
+
+double calcInc(const Vector h)
+{
+    return acos(h.z/h.abs());
 }
